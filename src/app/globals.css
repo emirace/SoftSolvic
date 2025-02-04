@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.left-gradient {
+  background: rgb(253,250,255);
+  background: linear-gradient(195deg, rgba(253,250,255,1) 0%, rgba(234,233,249,1) 68%, rgba(208,209,255,1) 100%); 
+
+}
+
+.right-gradient {
+  background: rgb(253,250,255);
+  background: linear-gradient(165deg, rgba(253,250,255,1) 0%, rgba(234,233,249,1) 68%, rgba(208,209,255,1) 100%);
+}
+
+input[type="file"] {
+  display: none;
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
