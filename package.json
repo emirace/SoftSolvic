@@ -26,8 +26,7 @@
     "react-icons": "^5.4.0",
     "react-media-recorder": "^1.7.1",
     "react-record-webcam": "^1.1.5",
-    "react-text-animate": "^2.1.1",
-    "react-video-recorder": "^3.19.4"
+    "react-text-animate": "^2.1.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
