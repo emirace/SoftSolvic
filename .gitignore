@@ -2,7 +2,6 @@
 
 # dependencies
 
-/backend
 /.next
 /node_modules
 /.pnp
