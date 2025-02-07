@@ -59,7 +59,7 @@ export default function Home() {
   const [video3_summary, setVideo3_summary] = useState("");
 
   // const API_URL = 'https://e552-128-195-96-60.ngrok-free.app/'
-  const API_URL = process.env.API_URL;
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
   console.log("api url:" + API_URL);
 
   const initializeData = {
