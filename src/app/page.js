@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import dynamic from "next/dynamic.js";
 import { useState, useEffect } from "react";
 import Introduction from "./components/Introduction.jsx";
 import GetStarted from "./components/GetStarted.jsx";
@@ -8,7 +9,15 @@ import JobDesc from "./components/JobDesc.jsx";
 import PersonalDesc from "./components/PersonalDesc.jsx";
 import InformationLoad from "./components/InformationLoad.jsx";
 import MeetingSelection from "./components/MeetingSelection.jsx";
-import EquipmentCheck from "./components/EquipmentCheck.jsx";
+const EquipmentCheck = dynamic(
+  () => import("./components/EquipmentCheck.jsx"),
+  {
+    ssr: false,
+  }
+);
+const Interview = dynamic(() => import("./components/Interview.jsx"), {
+  ssr: false,
+});
 // import Interview from "./components/Interview.jsx";
 import VideoHighlights from "./components/VideoHighlights.jsx";
 import ReportLoad from "./components/ReportLoad.jsx";
@@ -148,13 +157,13 @@ export default function Home() {
     />,
     <InformationLoad currentHTML={5} setCurrentHTML={setCurrentHTML} />,
     <EquipmentCheck currentHTML={6} setCurrentHTML={setCurrentHTML} />,
-    // <Interview
-    //   currentHTML={7}
-    //   setCurrentHTML={setCurrentHTML}
-    //   currentQuestion={currentQuestion}
-    //   interviewMode={interviewMode}
-    //   setRecentVideoRecording={setRecentVideoRecording}
-    // />,
+    <Interview
+      currentHTML={7}
+      setCurrentHTML={setCurrentHTML}
+      currentQuestion={currentQuestion}
+      interviewMode={interviewMode}
+      setRecentVideoRecording={setRecentVideoRecording}
+    />,
     <ReportLoad
       currentHTML={8}
       setCurrentHTML={setCurrentHTML}

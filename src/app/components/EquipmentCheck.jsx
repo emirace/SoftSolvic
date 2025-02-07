@@ -1,24 +1,25 @@
+"use client";
+
 import { useState, useEffect, useRef } from "react";
 
 import { TextEffectOne } from "react-text-animate";
-// import { useReactMediaRecorder } from "react-media-recorder";
+import { useReactMediaRecorder } from "react-media-recorder";
 
 export default function EquipmentCheck({ currentHTML, setCurrentHTML }) {
-  // const { status, startRecording, stopRecording, mediaBlobUrl } =
-  // useReactMediaRecorder({ video: true });
-  const mediaBlobUrl = "";
+  const { status, startRecording, stopRecording, mediaBlobUrl } =
+    useReactMediaRecorder({ video: true });
 
   const [isRecording, setIsRecording] = useState(false);
   const [tested, setTested] = useState(false);
 
   function handleStartRecording() {
     setIsRecording(true);
-    // startRecording();
+    startRecording();
   }
 
   function handleStopRecording() {
     setIsRecording(false);
-    // stopRecording();
+    stopRecording();
     setTested(true);
   }
 
