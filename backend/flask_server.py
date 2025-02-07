@@ -3,7 +3,7 @@ import warnings
 from flask import Flask
 from flask import request
 from flask_cors import CORS
-from pyngrok import ngrok
+# from pyngrok import ngrok
 
 import interview_api
 
@@ -46,8 +46,5 @@ def flask_get_video_analysis() -> dict[str, int | str]:
     return interview_api.get_video_analysis()
 
 if __name__ == '__main__':
-    public_url = ngrok.connect(5000)
-    print(f"ngrok tunnel available at {public_url}")
-
-    app.run(port=5000)
+    app.run(host="0.0.0.0", port=5000)
     
