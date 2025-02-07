@@ -19,7 +19,7 @@ AWS_SECRET_ACCESS_KEY=***,
 AWS_REGION=us-east-2,
 BEDROCK_MODEL=us.amazon.nova-lite-v1:0,
 OPENAI_API_KEY=***)
-To use the ngrok server, run "python -m fask_server"
+To use the ngrok server, run "python -m flask_server"
 ```
 
 ## Running frontend

@@ -4,11 +4,11 @@ import { Slide } from "@mui/material";
 
 export default function GetStarted({ currentHTML, setCurrentHTML }) {
   return (
-    <div className="w-screen h-screen flex flex-col items-center justify-center gap-y-16 left-gradient">
-      <h1 className="text-5xl">
-        <TextEffectOne text="welcome to" animateOnce staggerDuration={0.05} />
+    <div className="w-full min-h-screen flex flex-col items-center justify-center gap-y-8 px-4 text-center left-gradient">
+      <h1 className="text-3xl md:text-5xl">
+        <TextEffectOne text="Welcome to" animateOnce staggerDuration={0.05} />
       </h1>
-      <h1 className="text-9xl tracking-widest">
+      <h1 className="text-6xl md:text-9xl tracking-widest">
         <TextEffectOne
           text="SoftSolvic"
           lineHeight={1.2}
@@ -19,12 +19,12 @@ export default function GetStarted({ currentHTML, setCurrentHTML }) {
       </h1>
       <Slide direction="up" in={true} mountOnEnter timeout={1000}>
         <button
-          className="text-xl mt-16 hover:underline"
+          className="text-lg md:text-xl mt-8 md:mt-16 hover:underline"
           onClick={() => {
             setCurrentHTML(2);
           }}
         >
-          get started <span>👉</span>
+          Get Started <span>👉</span>
         </button>
       </Slide>
     </div>
