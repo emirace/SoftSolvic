@@ -5,9 +5,9 @@ from moviepy.editor import VideoFileClip, concatenate_videoclips
 import os
 import numpy as np
 
-class local_chat_memory:
-    
+import modules.s3_interactor as s3_interactor
 
+class LocalChatMemory:
     def __init__(self, session_id: str):
         self._session_id = session_id
 
@@ -82,6 +82,41 @@ def get_mp4_binary(filepath):
     int8_array = np.frombuffer(video_binary, dtype=np.int8)
 
     return int8_array.tolist()
+
+class S3ChatMemory:
+    def __init__(self, bucket: str, session_directory: str):
+        self._bucket = bucket
+        file_path = session_directory + "chat_history.json"
+        self._file_path = file_path
+
+        self._chat_history = s3_interactor.read_json(bucket, self._file_path)
+
+    def get_chat_history(self):
+        return self._chat_history
+    
+    def _save_changes(self):
+        s3_interactor.save_as_json(self._bucket, self._file_path, self._chat_history)
+    
+    def store_interviewer_question(self, question: str):
+        timestamp = datetime.now().isoformat()
+        self._chat_history[timestamp] = f"Interviwer: {question}"
+        self._save_changes()
+
+    def store_job_description(self, job_description: str):
+        timestamp = datetime.now().isoformat()
+        self._chat_history[timestamp] = f"Job description context: {job_description}"
+        self._save_changes()
+
+    def store_interviewee_response(self, response: str):
+        timestamp = datetime.now().isoformat()
+        self._chat_history[timestamp] = f"interviewee response: {response}"
+        self._save_changes()
+
+    def reset_interview(self):
+        self._chat_history = dict()
+        self._save_changes()
+
+
 
 if __name__ == '__main__':
     # local_chat_memory('test')
