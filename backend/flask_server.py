@@ -24,7 +24,7 @@ def flask_init_interview_session() -> dict[str, int | str]:
     session_key = data.get("session_key", "").strip()
     interviewee_resume = data.get("interviewee_resume", "")
 
-    return interview_api.init_interview_session(website_url, custom_job_str, interviewee_records, mode, session_key, interviewee_resume)
+    return interview_api.init_interview_session2(website_url, custom_job_str, interviewee_records, mode, session_key, interviewee_resume)
     
 
 @app.route("/get_interview_question", methods=["POST"])
@@ -37,7 +37,7 @@ def flask_get_interview_question():
     video_input = data.get("user_input", "") # Base64 encoded video data
     session_key = data.get("session_key", "").strip()
 
-    return interview_api.get_interview_question(video_input, session_key)
+    return interview_api.get_interview_question2(video_input, session_key)
 
 @app.route("/get_video_analysis", methods=["POST"])
 def flask_get_video_analysis() -> dict[str, int | str]:

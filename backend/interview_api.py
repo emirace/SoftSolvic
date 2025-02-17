@@ -4,6 +4,13 @@ import boto3
 import sys
 import traceback
 import time
+from openai import OpenAI
+from dotenv import load_dotenv
+import tempfile
+
+load_dotenv()
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY")) 
 
 from dotenv import load_dotenv
 from flask import jsonify
@@ -242,4 +249,142 @@ def get_video_analysis():
             "body": json.dumps({"error": str(e), "traceback": traceback.format_exc()})
         }
    
+def init_interview_session2(website_url: str, custom_job_str: str, interviewee_records: str,
+                           mode: str, session_key: str, interviewee_resume: bytearray) -> dict[str, int | str]:
+    
+    # Append parsed resume data
+    interviewee_records += parse_resume(interviewee_resume)
+    model_input = get_job_data(website_url, custom_job_str)
 
+    print(interviewee_records)
+    print(model_input)
+
+    try:
+        # Define the prompt template for OpenAI
+        system_prompt = """
+        You are an interviewer conducting a job interview. 
+        The job details come either from a website or a direct string input. 
+        - If a website is provided, assume its content has been retrieved.
+        - If a string job description is provided, use it as the sole reference.
+        
+        Do not assume anything about the interviewee beyond the provided details.
+        
+        Your task:
+        - Start the interview by asking one relevant question.
+        - You may end the interview anytime by responding with "****" (four asterisks) when appropriate.
+        - Provide only the next question as your output, nothing else.
+
+        Job Information: {job_info}
+        Interviewee Information: {interviewee_info}
+        """
+
+        formatted_prompt = system_prompt.format(job_info=model_input, interviewee_info=interviewee_records)
+
+        # OpenAI API call
+        response = client.chat.completions.create(
+            model="gpt-4o",  # Use GPT-4 or GPT-3.5 depending on your needs
+            messages=[
+                {"role": "system", "content": formatted_prompt}
+            ],
+            max_tokens=150
+        )
+
+        # Extract response content
+        interviewer_question = response.choices[0].message.content
+        print(interviewer_question)
+
+        # Store interview state
+        chat_memory = local_chat_memory(session_key)
+        chat_memory.reset_interview()
+        chat_memory.store_job_description(model_input)
+        chat_memory.store_interviewer_question(interviewer_question)
+
+        # Prepare response
+        output = {
+            "statusCode": 200,
+            "body": json.dumps({"summary": interviewer_question})
+        }
+        return jsonify(output)
+
+    except Exception as e:
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"error": str(e)})
+        }
+
+def get_interview_question2(video_input: bytearray, session_key: str):
+    try:
+        # Save audio input to a temporary file
+              # Check if video_input is a list and convert to bytes if necessary
+        if isinstance(video_input, list):
+            video_input = bytes(video_input)  # Convert list to byte array
+
+        # Ensure video_input is a bytes-like object
+        if not isinstance(video_input, (bytes, bytearray)):
+            raise TypeError("video_input must be a bytes-like object")
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_audio:
+            temp_audio.write(video_input)
+            temp_audio_path = temp_audio.name
+
+        # Transcribe the audio using OpenAI Whisper
+        with open(temp_audio_path, "rb") as audio_file:
+            transcript_response = client.audio.transcriptions.create(
+                model="whisper-1",
+                file=audio_file
+            )
+            audio_transcript = transcript_response.text
+            print(audio_transcript)
+
+        # Retrieve chat history
+        memory_obj = local_chat_memory(session_key)
+        chat_history = memory_obj.get_chat_history()
+
+        # Generate interviewer's next question
+        system_prompt = f"""
+        You are an AI interviewer conducting a job interview. 
+        You have access to the previous chat history and the interviewee's latest response. 
+        Ask the next appropriate question based on the job application and the interviewee's answer.
+        
+        If the interview should end, respond with "****" (four asterisks).
+        
+        Chat History: {chat_history}
+        Interviewee's Last Response: "{audio_transcript}"
+        
+        Provide your response in this JSON format:
+        {{
+            "next_question": "your next question here"
+        }}
+        """
+
+        # OpenAI Chat API Call
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[{"role": "system", "content": system_prompt}],
+            max_tokens=150
+        )
+
+        print(response.choices[0].message.content)
+        next_question = json.loads(response.choices[0].message.content).get("next_question")
+
+        # Store the response
+        memory_obj.store_interviewee_response(audio_transcript)
+
+        # Cleanup temp files
+        os.remove(temp_audio_path)
+
+        # Return response
+        output = {
+            "statusCode": 200,
+            "body": json.dumps({
+                "audio_transcript": audio_transcript,
+                "next_question": next_question
+            })
+        }
+        return jsonify(output)
+
+    except Exception as e:
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"error": str(e), "traceback": traceback.format_exc()})
+        }

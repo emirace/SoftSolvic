@@ -1,12 +1,8 @@
 import { Drawer } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { TextEffectOne } from "react-text-animate";
 
 import Snackbar from "@mui/material/Snackbar";
-import {
-  ReactMediaRecorder,
-  useReactMediaRecorder,
-} from "react-media-recorder";
 
 export default function Interview({
   currentHTML,
@@ -15,93 +11,89 @@ export default function Interview({
   interviewMode,
   setRecentVideoRecording,
 }) {
-  let { status, startRecording, stopRecording, clearBlobUrl, mediaBlobUrl } =
-    useReactMediaRecorder({
-      video: true,
-      audio: true,
-      blobPropertyBag: { type: "video/mp4" },
-      mediaRecorderOptions: {
-        mimeType: 'video/mp4; codecs="avc1.424028"',
-      },
-    });
-
   const [isRecording, setIsRecording] = useState(false);
   const [recruiterOpen, setRecruiterOpen] = useState(false);
   const [clicked, setClicked] = useState(false);
-
-  function handleStartRecording() {
-    setIsRecording(true);
-    startRecording();
-  }
-
-  function handleStopRecording() {
-    fetch(mediaBlobUrl)
-      .then((response) => response.blob())
-      .then((blob) => {
-        console.log(blob);
-
-        const file = new File([blob], "video.mp4", { type: "video/mp4" });
-
-        console.log(file);
-
-        const reader = new FileReader();
-        reader.onload = () => {
-          const arrayBuffer = reader.result;
-          const byteArray = new Uint8Array(arrayBuffer);
-          const bytes = Array.from(byteArray);
-          console.log(bytes);
-          if (!clicked) {
-            setClicked(true);
-          } else {
-            setRecentVideoRecording(bytes);
-          }
-        };
-        reader.readAsArrayBuffer(file);
-
-        /*
-            const blobContent = blob.text();          
-
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.controls = true;
-            a.download = 'video.mp4';
-            a.click()
-
-            console.log(url)
-            
-            console.log(a)
-
-            //const videoUrl = URL.createObjectURL(videoBlob);
-            console.log(blobContent.then(data => {
-                console.log(typeof data)
-                setRecentVideoRecording(data)
-            }))
-            */
-      });
-
-    setIsRecording(false);
-    stopRecording();
-  }
+  const mediaRecorder = useRef(null);
+  const [audioBlobUrl, setAudioBlobUrl] = useState(null);
+  const audioChunks = useRef([]);
 
   useEffect(() => {
-    handleStartRecording();
-    stopRecording();
-    handleStartRecording();
-  }, []);
+    // Start the recording when the question changes
+    if (currentQuestion) {
+      handleStartRecording();
+    }
 
-  function handleDone() {
+    return () => {
+      // Cleanup: stop the recording when the component is unmounted
+      if (
+        mediaRecorder.current &&
+        mediaRecorder.current.state === "recording"
+      ) {
+        mediaRecorder.current.stop();
+      }
+    };
+  }, [currentQuestion]);
+
+  const startRecording = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: true, // Only capture audio
+    });
+
+    mediaRecorder.current = new MediaRecorder(stream);
+
+    mediaRecorder.current.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        audioChunks.current.push(event.data);
+      }
+    };
+
+    mediaRecorder.current.onstop = () => {
+      const audioBlob = new Blob(audioChunks.current, { type: "audio/wav" });
+      setAudioBlobUrl(URL.createObjectURL(audioBlob));
+    };
+
+    mediaRecorder.current.start();
+  };
+
+  const handleStartRecording = () => {
+    setIsRecording(true);
+    startRecording();
+  };
+
+  const handleStopRecording = () => {
+    if (mediaRecorder.current) {
+      mediaRecorder.current.stop();
+    }
+    setIsRecording(false);
+  };
+
+  const handleDone = () => {
     if (isRecording) {
       handleStopRecording();
-      console.log("stopped");
     }
-    handleStartRecording();
-  }
+    // Do something with the audio here (e.g., send it to the backend)
+    if (audioBlobUrl) {
+      fetch(audioBlobUrl)
+        .then((response) => response.blob())
+        .then((blob) => {
+          const file = new File([blob], "audio.wav", { type: "audio/wav" });
+          const reader = new FileReader();
+          reader.onload = () => {
+            const arrayBuffer = reader.result;
+            const byteArray = new Uint8Array(arrayBuffer);
+            const bytes = Array.from(byteArray);
+            setRecentVideoRecording(bytes);
+          };
+          reader.readAsArrayBuffer(file);
+        });
+    }
+  };
 
-  function handleEndInterview() {
+  const handleEndInterview = () => {
     handleDone();
     setCurrentHTML(8);
-  }
+  };
 
   return (
     <>
@@ -149,6 +141,9 @@ export default function Interview({
         <p className="text-center text-2xl my-4 text-blue-800 font-bold">
           Coffee Chat
         </p>
+        {isRecording && (
+          <div className="text-2xl text-blue-800">Recording...</div>
+        )}
       </div>
 
       <button

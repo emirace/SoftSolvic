@@ -1,14 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 
 import { TextEffectOne } from "react-text-animate";
-// import { useReactMediaRecorder } from "react-media-recorder";
+import { useReactMediaRecorder } from "react-media-recorder";
 
 export default function EquipmentCheck({ currentHTML, setCurrentHTML }) {
   const { status, startRecording, stopRecording, mediaBlobUrl } =
     useReactMediaRecorder({ video: true });
 
-  const [isRecording, setIsRecording] = useState(false);
-  const [tested, setTested] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [tested, setTested] = useState(false);
 
