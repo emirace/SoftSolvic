@@ -37,7 +37,11 @@ def flask_get_interview_question():
 def flask_get_video_analysis():
     """Flask API function to get interview question based on user response. Returns the next question."""
     warnings.filterwarnings("ignore")
-    return interview_api.get_video_analysis()
+    
+    data = request.get_json()
+    
+    secretkey = data.get("secretkey", "") 
+    return interview_api.analyze_chat_history(secretkey)
 
 @app.route("/get_s3_details", methods=["POST"])
 def flask_get_s3_details():
