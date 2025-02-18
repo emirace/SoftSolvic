@@ -248,7 +248,7 @@ def get_video_analysis():
             "statusCode": 500,
             "body": json.dumps({"error": str(e), "traceback": traceback.format_exc()})
         }
-   
+
 def init_interview_session2(website_url: str, custom_job_str: str, interviewee_records: str,
                            mode: str, session_key: str, interviewee_resume: bytearray) -> dict[str, int | str]:
     
@@ -359,7 +359,7 @@ def get_interview_question2(video_input: bytearray, session_key: str):
 
         # OpenAI Chat API Call
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=[{"role": "system", "content": system_prompt}],
             max_tokens=150
         )
@@ -369,6 +369,7 @@ def get_interview_question2(video_input: bytearray, session_key: str):
 
         # Store the response
         memory_obj.store_interviewee_response(audio_transcript)
+        memory_obj.store_interviewer_question(next_question)
 
         # Cleanup temp files
         os.remove(temp_audio_path)
@@ -388,3 +389,46 @@ def get_interview_question2(video_input: bytearray, session_key: str):
             "statusCode": 500,
             "body": json.dumps({"error": str(e), "traceback": traceback.format_exc()})
         }
+
+
+def analyze_chat_history(session_key: str):
+    try:
+        # Retrieve chat history from memory
+        memory_obj = local_chat_memory(session_key)
+        chat_history = memory_obj.get_chat_history()
+
+        # System prompt for GPT-4
+        system_prompt = """
+        You are an AI interviewer analyzing a job interview based on chat history.
+        Evaluate the interviewee's responses, professionalism, and communication skills.
+        Identify strong and weak points. Provide structured feedback in JSON format with:
+        - 'overall_rating' (scale of 1-10)
+        - 'general_feedback'
+        - 'notable_events' (list of 3 key moments with timestamps if available)
+        """
+
+        # User message containing the chat history
+        user_message = f"Here is the interview chat history:\n{chat_history}\nAnalyze this and provide structured feedback."
+
+        # Send request to OpenAI GPT-4
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message},
+            ],
+            max_tokens=600,
+        )
+
+        # Parse the response into JSON
+        analysis_result = json.loads(response.choices[0].message.content)
+        
+        output = {
+            "statusCode": 200,
+            "body": json.dumps({
+                "text_report": analysis_result,})}
+
+        return jsonify(output)
+
+    except Exception as e:
+        return {"error": str(e)}

@@ -43,7 +43,11 @@ def flask_get_interview_question():
 def flask_get_video_analysis() -> dict[str, int | str]:
     """flask api function to get interview question based on user response. returns the next question"""
     warnings.filterwarnings("ignore")
-    return interview_api.get_video_analysis()
+    
+    data = request.get_json()
+    
+    secretkey = data.get("secretkey", "") 
+    return interview_api.analyze_chat_history(secretkey)
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)

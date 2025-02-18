@@ -29,6 +29,7 @@ export default function ReportLoad({
   video3_summary,
   setVideo3_summary,
   API_URL,
+  secretkey,
 }) {
   const [loading, setLoading] = useState(false);
 
@@ -40,7 +41,7 @@ export default function ReportLoad({
         Accept: "application/json",
         "ngrok-skip-browser-warning": "true",
       },
-      body: JSON.stringify({}),
+      body: JSON.stringify({ secretkey }),
     })
       .then((res) => res.json())
       .then((data) => {

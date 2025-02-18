@@ -68,6 +68,22 @@ export default function Home() {
   const [video1_summary, setVideo1_summary] = useState("");
   const [video2_summary, setVideo2_summary] = useState("");
   const [video3_summary, setVideo3_summary] = useState("");
+  const [secretkey, setSecretkey] = useState("");
+
+  const getRandomString = (length = 10) => {
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let result = "";
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  };
+
+  useEffect(() => {
+    const key = getRandomString();
+    setSecretkey(key);
+  }, []);
 
   // const API_URL = 'https://e552-128-195-96-60.ngrok-free.app/'
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -190,6 +206,7 @@ export default function Home() {
       setVideo2_summary={setVideo2_summary}
       setVideo3_summary={setVideo3_summary}
       API_URL={API_URL}
+      secretkey={secretkey}
     />,
     <VideoHighlights
       currentHTML={9}
@@ -278,7 +295,7 @@ export default function Home() {
           formExperienceLocations: initializeData.formExperienceLocations,
         },
         website_url: initializeData.jobLink,
-        session_key: "test",
+        session_key: secretkey,
         interviewee_resume: initializeData.resumeFile,
       });
       fetch(API_LINK, {
@@ -325,7 +342,7 @@ export default function Home() {
         let API_LINK = API_URL + "get_interview_question";
         let body = JSON.stringify({
           user_input: recentVideoRecording,
-          session_key: "test",
+          session_key: secretkey,
         });
         fetch(API_LINK, {
           method: "POST",

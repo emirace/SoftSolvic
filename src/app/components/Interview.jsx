@@ -91,7 +91,8 @@ export default function Interview({
   };
 
   const handleEndInterview = () => {
-    handleDone();
+    // handleDone();
+    handleStopRecording();
     setCurrentHTML(8);
   };
 

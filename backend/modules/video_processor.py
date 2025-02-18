@@ -1,6 +1,12 @@
 import base64
 import boto3
 import json
+import cv2
+import numpy as np
+import ffmpeg
+import tempfile
+import openai
+import os
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -73,6 +79,89 @@ def analyze_video(base64_string: str, max_length: int):
     # Extract and print the analysis result
     content_text = model_response["output"]["message"]["content"][0]["text"]
     return content_text
+
+
+# OpenAI API Key (Set your API key)
+openai.api_key = "YOUR_OPENAI_API_KEY"
+
+def analyze_video2(base64_string: str, max_length: int):
+    try:
+        # Decode base64 video to a temporary file
+        video_data = base64.b64decode(base64_string)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_video:
+            temp_video.write(video_data)
+            temp_video_path = temp_video.name
+
+        # Extract audio from video
+        temp_audio_path = temp_video_path.replace(".mp4", ".mp3")
+        ffmpeg.input(temp_video_path).output(temp_audio_path).run(overwrite_output=True)
+
+        # Transcribe speech using OpenAI Whisper
+        with open(temp_audio_path, "rb") as audio_file:
+            transcript_response = openai.Audio.transcriptions.create(
+                model="whisper-1", file=audio_file
+            )
+            transcript_text = transcript_response["text"]
+
+        # Extract key video frames (every 5 seconds)
+        cap = cv2.VideoCapture(temp_video_path)
+        frame_rate = cap.get(cv2.CAP_PROP_FPS)
+        frame_interval = int(frame_rate * 5)  # Extract frame every 5 seconds
+        frames = []
+
+        frame_idx = 0
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+            if frame_idx % frame_interval == 0:
+                _, buffer = cv2.imencode(".jpg", frame)
+                frames.append(base64.b64encode(buffer).decode("utf-8"))  # Convert to base64
+            frame_idx += 1
+
+        cap.release()
+
+        # Prepare input for GPT-4 analysis
+        system_prompt = f"""
+        You are an AI interviewer analyzing a job interview. You have access to:
+        - The interview transcript.
+        - Key video frames (as base64 images).
+        - The maximum video length is {max_length} seconds.
+
+        Evaluate the interviewee's behavior, eye contact, and hand movements. Identify significant moments
+        and list them in JSON format under "notable_events". Provide:
+        - 'overall_rating' (scale of 1-10)
+        - 'general_feedback' (minimum 200 words)
+        - 'notable_events' (list of 3 major moments with timestamps)
+        """
+
+        user_prompt = {
+            "transcript": transcript_text,
+            "key_frames": frames,
+            "max_length": max_length,
+        }
+
+        response = openai.Chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": json.dumps(user_prompt)},
+            ],
+            max_tokens=600,
+        )
+
+        analysis_result = json.loads(response.choices[0].message.content)
+
+        # Cleanup temporary files
+        os.remove(temp_video_path)
+        os.remove(temp_audio_path)
+
+        return analysis_result
+
+    except Exception as e:
+        return {"error": str(e)}
+
+
 
 if __name__ == "__main__":
     # Video File Path
