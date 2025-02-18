@@ -8,6 +8,8 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import tempfile
 
+import re
+
 load_dotenv()
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY")) 
@@ -263,6 +265,15 @@ def invoke_chain(chain, model_inputs: dict):
     response = chain.invoke(model_inputs)
     return response
 
+def clean_json_response(response: str) -> str:
+    """
+    Removes ```json and ``` tags from the response if they exist.
+    
+    :param response: The response string from OpenAI
+    :return: Cleaned JSON string
+    """
+    return re.sub(r'^```json\n?|```$', '', response.strip(), flags=re.MULTILINE)
+
 def get_bedrock_response(message_list: list) -> tuple[str, str]:
     client = boto3.client("bedrock-runtime", region_name="us-east-2")
     # MODEL_ID = os.getenv("BEDROCK_MODEL")
@@ -505,7 +516,7 @@ def init_interview_session2(website_url: str, custom_job_str: str, interviewee_r
         print(interviewer_question)
 
         # Store interview state
-        chat_memory = local_chat_memory(session_key)
+        chat_memory = LocalChatMemory(session_key)
         chat_memory.reset_interview()
         chat_memory.store_job_description(model_input)
         chat_memory.store_interviewer_question(interviewer_question)
@@ -548,7 +559,7 @@ def get_interview_question2(video_input: bytearray, session_key: str):
             print(audio_transcript)
 
         # Retrieve chat history
-        memory_obj = local_chat_memory(session_key)
+        memory_obj = LocalChatMemory(session_key)
         chat_history = memory_obj.get_chat_history()
 
         # Generate interviewer's next question
@@ -574,9 +585,9 @@ def get_interview_question2(video_input: bytearray, session_key: str):
             messages=[{"role": "system", "content": system_prompt}],
             max_tokens=150
         )
-
-        print(response.choices[0].message.content)
-        next_question = json.loads(response.choices[0].message.content).get("next_question")
+        cleaned_response = clean_json_response(response.choices[0].message.content)
+        print(cleaned_response)
+        next_question = json.loads(cleaned_response).get("next_question")
 
         # Store the response
         memory_obj.store_interviewee_response(audio_transcript)
@@ -605,8 +616,12 @@ def get_interview_question2(video_input: bytearray, session_key: str):
 def analyze_chat_history(session_key: str):
     try:
         # Retrieve chat history from memory
-        memory_obj = local_chat_memory(session_key)
+        memory_obj = LocalChatMemory(session_key)
         chat_history = memory_obj.get_chat_history()
+
+        print(chat_history)
+
+
 
         # System prompt for GPT-4
         system_prompt = """
@@ -615,7 +630,10 @@ def analyze_chat_history(session_key: str):
         Identify strong and weak points. Provide structured feedback in JSON format with:
         - 'overall_rating' (scale of 1-10)
         - 'general_feedback'
-        - 'notable_events' (list of 3 key moments with timestamps if available)
+        - 'notable_events':
+               -'timestamp'
+               -'event'
+                 (list of 3 key moments with timestamps if available)
         """
 
         # User message containing the chat history
@@ -623,22 +641,25 @@ def analyze_chat_history(session_key: str):
 
         # Send request to OpenAI GPT-4
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_message},
             ],
             max_tokens=600,
         )
-
-        # Parse the response into JSON
-        analysis_result = json.loads(response.choices[0].message.content)
         
+        cleaned_response = clean_json_response(response.choices[0].message.content)
+        print(cleaned_response)
+        # Parse the response into JSON
+        analysis_result = json.loads(cleaned_response)
+    
         output = {
-            "statusCode": 200,
-            "body": json.dumps({
-                "text_report": analysis_result,})}
-
+                "statusCode": 200,
+                "body": json.dumps({
+                    "text_report": analysis_result
+                })
+            }
         return jsonify(output)
 
     except Exception as e:

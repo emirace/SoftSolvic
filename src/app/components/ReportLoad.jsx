@@ -46,7 +46,7 @@ export default function ReportLoad({
       .then((res) => res.json())
       .then((data) => {
         const json_data = JSON.parse(data.body);
-
+        console.log(json_data);
         setTextReport(json_data["text_report"]);
 
         setVideo1(json_data["video1"]);

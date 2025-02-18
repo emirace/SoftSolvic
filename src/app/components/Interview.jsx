@@ -10,6 +10,7 @@ export default function Interview({
   currentQuestion,
   interviewMode,
   setRecentVideoRecording,
+  loadingQuestion,
 }) {
   const [isRecording, setIsRecording] = useState(false);
   const [recruiterOpen, setRecruiterOpen] = useState(false);
@@ -147,26 +148,30 @@ export default function Interview({
         )}
       </div>
 
-      <button
-        onClick={handleDone}
-        className="absolute flex flex-row items-center gap-x-2 bottom-16 bg-blue-800 text-white py-2 px-6 rounded-3xl hover:bg-blue-950 transition-all right-64"
-      >
-        done
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          className="size-5"
+      {loadingQuestion ? (
+        <div className="absolute right-64 bottom-16">Loading...</div>
+      ) : (
+        <button
+          onClick={handleDone}
+          className="absolute flex flex-row items-center gap-x-2 bottom-16 bg-blue-800 text-white py-2 px-6 rounded-3xl hover:bg-blue-950 transition-all right-64"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="m4.5 12.75 6 6 9-13.5"
-          />
-        </svg>
-      </button>
+          done
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="size-5"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="m4.5 12.75 6 6 9-13.5"
+            />
+          </svg>
+        </button>
+      )}
 
       <button
         onClick={handleEndInterview}

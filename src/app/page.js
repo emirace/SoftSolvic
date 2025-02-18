@@ -69,6 +69,7 @@ export default function Home() {
   const [video2_summary, setVideo2_summary] = useState("");
   const [video3_summary, setVideo3_summary] = useState("");
   const [secretkey, setSecretkey] = useState("");
+  const [loadingQuestion, setLoadingQuestion] = useState(true);
 
   const getRandomString = (length = 10) => {
     const chars =
@@ -181,6 +182,7 @@ export default function Home() {
       currentQuestion={currentQuestion}
       interviewMode={interviewMode}
       setRecentVideoRecording={setRecentVideoRecording}
+      loadingQuestion={loadingQuestion}
     />,
     <ReportLoad
       currentHTML={8}
@@ -308,7 +310,10 @@ export default function Home() {
         body: body,
       })
         .then((response) => response.json())
-        .then((data) => setCurrentQuestion(JSON.parse(data.body)["summary"]));
+        .then((data) => {
+          setCurrentQuestion(JSON.parse(data.body)["summary"]);
+          setLoadingQuestion(false);
+        });
     }
   }, [currentHTML]);
 
@@ -335,10 +340,10 @@ export default function Home() {
   }, [currentHTML])
 
   */
-
   useEffect(() => {
     if (recentVideoRecording !== "") {
       try {
+        setLoadingQuestion(true);
         let API_LINK = API_URL + "get_interview_question";
         let body = JSON.stringify({
           user_input: recentVideoRecording,
@@ -360,6 +365,8 @@ export default function Home() {
           });
       } catch (error) {
         console.log(error);
+      } finally {
+        setLoadingQuestion(false);
       }
     }
   }, [recentVideoRecording]);
