@@ -5,28 +5,21 @@ import sys
 import traceback
 import time
 from openai import OpenAI
-from dotenv import load_dotenv
 import tempfile
-
+import base64
 import re
-
-load_dotenv()
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY")) 
-
 from dotenv import load_dotenv
 from flask import jsonify
-
 from langchain_aws import ChatBedrock
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-
 from modules.memory_class import LocalChatMemory, combine_videos, get_mp4_binary, S3ChatMemory
 from modules.crop_function import get_video_clips
 from modules.job_web_scrape import search_page
 from modules.resume_reader import extract_text_from_pdf
 import modules.s3_interactor as s3_interactor
 
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY")) 
 
 load_dotenv()
 
@@ -515,6 +508,17 @@ def init_interview_session2(website_url: str, custom_job_str: str, interviewee_r
         interviewer_question = response.choices[0].message.content
         print(interviewer_question)
 
+          # Convert question to speech using OpenAI TTS
+        tts_response = client.audio.speech.create(
+            model="tts-1",  # Choose from "tts-1" or "tts-1-hd"
+            voice="alloy",  # Options: alloy, echo, fable, onyx, nova, or shimmer
+            input=interviewer_question
+        )
+
+        # Encode audio as base64
+        audio_base64 = base64.b64encode(tts_response.content).decode('utf-8')
+
+
         # Store interview state
         chat_memory = LocalChatMemory(session_key)
         chat_memory.reset_interview()
@@ -524,7 +528,8 @@ def init_interview_session2(website_url: str, custom_job_str: str, interviewee_r
         # Prepare response
         output = {
             "statusCode": 200,
-            "body": json.dumps({"summary": interviewer_question})
+            "body": json.dumps({"summary": interviewer_question,
+                "audio_base64": audio_base64})
         }
         return jsonify(output)
 
@@ -589,6 +594,17 @@ def get_interview_question2(video_input: bytearray, session_key: str):
         print(cleaned_response)
         next_question = json.loads(cleaned_response).get("next_question")
 
+            # Convert question to speech using OpenAI TTS
+        tts_response = client.audio.speech.create(
+            model="tts-1",  
+            voice="alloy", 
+            input=next_question
+        )
+
+        # Encode audio as base64
+        audio_base64 = base64.b64encode(tts_response.content).decode('utf-8')
+
+
         # Store the response
         memory_obj.store_interviewee_response(audio_transcript)
         memory_obj.store_interviewer_question(next_question)
@@ -601,7 +617,8 @@ def get_interview_question2(video_input: bytearray, session_key: str):
             "statusCode": 200,
             "body": json.dumps({
                 "audio_transcript": audio_transcript,
-                "next_question": next_question
+                "next_question": next_question,
+                "audio_base64":audio_base64
             })
         }
         return jsonify(output)

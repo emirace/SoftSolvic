@@ -311,7 +311,20 @@ export default function Home() {
       })
         .then((response) => response.json())
         .then((data) => {
-          setCurrentQuestion(JSON.parse(data.body)["summary"]);
+          const responseBody = JSON.parse(data.body);
+          const question = responseBody["summary"];
+          const audioBase64 = responseBody["audio_base64"];
+
+          setCurrentQuestion(question);
+          setLoadingQuestion(false);
+
+          if (audioBase64) {
+            const audio = new Audio(`data:audio/mpeg;base64,${audioBase64}`);
+            audio.play();
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching interview question:", error);
           setLoadingQuestion(false);
         });
     }
@@ -360,8 +373,14 @@ export default function Home() {
         })
           .then((response) => response.json())
           .then((data) => {
-            console.log(data);
-            setCurrentQuestion(JSON.parse(data.body)["next_question"]);
+            const responseBody = JSON.parse(data.body);
+            setCurrentQuestion(responseBody["next_question"]);
+            const audioBase64 = responseBody["audio_base64"];
+            if (audioBase64) {
+              const audio = new Audio(`data:audio/mpeg;base64,${audioBase64}`);
+              audio.play();
+            }
+            setLoadingQuestion(false);
           });
       } catch (error) {
         console.log(error);
