@@ -128,9 +128,19 @@ export default function Interview({
       </Drawer>
 
       <div className="w-screen min-h-screen flex flex-col pt-28 py-10 px-16 right-gradient items-center justify-center">
-        <p className="text-center text-2xl my-6 text-gray-600">
-          {currentQuestion}
-        </p>
+        <div className="w-full h-[75vh] overflow-y-auto p-6 bg-gray-100">
+          {currentQuestion.map((question) => (
+            <div
+              className={`flex w-full ${
+                question.type === "agent" ? "justify-start" : "justify-end"
+              }`}
+            >
+              <p className={`text-xl max-w-2xl my-6 text-gray-600"`}>
+                {question.text}
+              </p>
+            </div>
+          ))}
+        </div>
         <hr className="border-[3px] rounded-lg w-[800px] mt-4 border-blue-700" />
         <h1 className="text-7xl font-bold tracking-widest text-center text-blue-800">
           <TextEffectOne
@@ -148,38 +158,39 @@ export default function Interview({
         )}
       </div>
 
-      {loadingQuestion ? (
-        <div className="absolute right-64 bottom-16">Loading...</div>
-      ) : (
-        <button
-          onClick={handleDone}
-          className="absolute flex flex-row items-center gap-x-2 bottom-16 bg-blue-800 text-white py-2 px-6 rounded-3xl hover:bg-blue-950 transition-all right-64"
-        >
-          done
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="size-5"
+      <div className="fixed right-5 bottom-5 flex items-center gap-6">
+        {loadingQuestion ? (
+          <div className="">Loading...</div>
+        ) : (
+          <button
+            onClick={handleDone}
+            className=" flex flex-row items-center gap-x-2  bg-blue-800 text-white py-2 px-6 rounded-3xl hover:bg-blue-950 transition-all "
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="m4.5 12.75 6 6 9-13.5"
-            />
-          </svg>
+            done
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="size-5"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="m4.5 12.75 6 6 9-13.5"
+              />
+            </svg>
+          </button>
+        )}
+
+        <button
+          onClick={handleEndInterview}
+          className=" flex flex-row items-center gap-x-2  bg-blue-800 text-white py-2 px-6 rounded-3xl hover:bg-blue-950 transition-all "
+        >
+          end interview
         </button>
-      )}
-
-      <button
-        onClick={handleEndInterview}
-        className="absolute flex flex-row items-center gap-x-2 bottom-16 bg-blue-800 text-white py-2 px-6 rounded-3xl hover:bg-blue-950 transition-all right-20"
-      >
-        end interview
-      </button>
-
+      </div>
       <Snackbar
         open={clicked}
         autoHideDuration={6000}

@@ -1,6 +1,5 @@
 /* eslint-disable react/jsx-key */
 "use client";
-"use client";
 
 import Image from "next/image";
 import dynamic from "next/dynamic.js";
@@ -53,7 +52,7 @@ export default function Home() {
   const [formExperienceCompanies, setFormExperienceCompanies] = useState([]);
   const [formExperienceLocations, setFormExperienceLocations] = useState([]);
 
-  const [currentQuestion, setCurrentQuestion] = useState("");
+  const [currentQuestion, setCurrentQuestion] = useState([]);
 
   const [interviewMode, setInterviewMode] = useState("");
   const [recentVideoRecording, setRecentVideoRecording] = useState("");
@@ -315,7 +314,10 @@ export default function Home() {
           const question = responseBody["summary"];
           const audioBase64 = responseBody["audio_base64"];
 
-          setCurrentQuestion(question);
+          setCurrentQuestion((prev) => [
+            ...prev,
+            { type: "agent", text: question },
+          ]);
           setLoadingQuestion(false);
 
           if (audioBase64) {
@@ -374,7 +376,11 @@ export default function Home() {
           .then((response) => response.json())
           .then((data) => {
             const responseBody = JSON.parse(data.body);
-            setCurrentQuestion(responseBody["next_question"]);
+            setCurrentQuestion((prev) => [
+              ...prev,
+              { type: "user", text: responseBody["audio_transcript"] },
+              { type: "agent", text: responseBody["next_question"] },
+            ]);
             const audioBase64 = responseBody["audio_base64"];
             if (audioBase64) {
               const audio = new Audio(`data:audio/mpeg;base64,${audioBase64}`);
