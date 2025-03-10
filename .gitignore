@@ -22,6 +22,9 @@
 # production
 /build
 
+backend/chat_histories/*
+/backend/chat_histories
+
 # misc
 .DS_Store
 *.pem

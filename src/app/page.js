@@ -225,22 +225,6 @@ export default function Home() {
     />,
   ];
 
-  console.log({
-    video1: video1,
-    video2: video2,
-    video3: video3,
-
-    video1_title: video1_title,
-    video2_title: video2_title,
-    video3_title: video3_title,
-
-    video1_summary: video1_summary,
-    video2_summary: video2_summary,
-    video3_summary: video3_summary,
-
-    textReport: textReport,
-  });
-
   /*
   const fakeData = {
     

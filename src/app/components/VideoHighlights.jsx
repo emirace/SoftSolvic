@@ -1,6 +1,7 @@
 import { Slide } from "@mui/material";
 import { useEffect, useState } from "react";
 import moment from "moment";
+import ChatDisplay from "./ChatDisplay";
 
 export default function VideoHighlights({
   currentHTML,
@@ -36,6 +37,8 @@ export default function VideoHighlights({
     setVideo3Blob(video3URL);
   }, []);
 
+  console.log(textReport);
+
   return (
     <div className="w-screen min-h-screen flex flex-col pt-14 py-10 px-16 right-gradient">
       <Slide direction="right" in={true} mountOnEnter timeout={2000}>
@@ -67,14 +70,14 @@ export default function VideoHighlights({
             </div> */}
 
       <div className="text-3xl text-center mb-4">
-        Overall Rating: {textReport.overall_rating}/10
+        Overall Rating: {textReport["text_report"].overall_rating}/10
       </div>
       <div className="text-gray-800 text-xl max-w-5xl justify-center mx-auto  rounded-lg shadow-lg p-4 bg-white mb-6">
         <p className="text-2xl mb-4">General feedback: </p>
-        {textReport.general_feedback}
+        {textReport["text_report"].general_feedback}
       </div>
-      <div className="text-gray-800 text-xl max-w-5xl justify-center mx-auto  rounded-lg shadow-lg p-4 bg-white">
-        {textReport.notable_events.map((event) => (
+      <div className="text-gray-800 text-xl max-w-5xl mb-6 justify-center mx-auto  rounded-lg shadow-lg p-4 bg-white">
+        {textReport["text_report"].notable_events.map((event) => (
           <div key={event?.timestamp} className="mb-4">
             <p className="text-2xl mb-2">
               Notable event at {moment(event?.timestamp).calendar()}
@@ -83,6 +86,7 @@ export default function VideoHighlights({
           </div>
         ))}
       </div>
+      <ChatDisplay chatHistory={textReport["chat_history"]} />
     </div>
   );
 }

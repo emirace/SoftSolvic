@@ -674,7 +674,8 @@ def analyze_chat_history(session_key: str):
         output = {
                 "statusCode": 200,
                 "body": json.dumps({
-                    "text_report": analysis_result
+                    "text_report": analysis_result,
+                    "chat_history": chat_history
                 })
             }
         return jsonify(output)
